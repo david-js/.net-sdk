@@ -11,6 +11,17 @@ namespace CTCT
     public static class OAuth
     {
         /// <summary>
+        /// Set CTCT configuration information if the api key and client secret are stored somewhere besides the default names in the configuration settings.
+        /// This method is optional, and if it is not called, the configuration is queried for these values.
+        /// </summary>
+        /// <param name="apiKey"></param>
+        /// <param name="clientSecret"></param>
+        public static void Initialize(string apiKey, string clientSecret)
+        {
+            AuthenticationWebPage.Initialize(apiKey, clientSecret);
+        }
+
+        /// <summary>
         /// Returns access token obtained after authenticating client app
         /// </summary>
         /// <param name="state">state query parameter</param>
@@ -31,10 +42,25 @@ namespace CTCT
         /// </summary>
         /// <param name="httpContext">current application context</param>
         /// <param name="state">state query parameter</param>
-        public static void AuthorizeFromWebApplication(HttpContext httpContext, string state)
+        /// <param name="redirectUrl">where to redirect after authentication, must match configuration on Constant Contact site</param>
+        public static void AuthorizeFromWebApplication(HttpContext httpContext, string state, string redirectUrl = null)
         {
-             var webForm = new AuthenticationWebPage(httpContext, state);
+             var webForm = new AuthenticationWebPage(httpContext, state, redirectUrl);
              webForm.GetAuthorizationCode();
+        }
+
+        /// <summary>
+        /// Returns the redirect URL to make an authorization request to Constant Contact API
+        /// (if access to application is granted, a code is sent to Redirect URL field)
+        /// (Redirect URL is one of web application url pages/methods)
+        /// </summary>
+        /// <param name="httpContext">current application context</param>
+        /// <param name="state">state query parameter</param>
+        /// <param name="redirectUrl">where to redirect after authentication, must match configuration on Constant Contact site</param>
+        public static string GetUrlToAuthorizeFromWebApplication(HttpContext httpContext, string state, string redirectUrl = null)
+        {
+            var webForm = new AuthenticationWebPage(httpContext, state, redirectUrl);
+            return webForm.GetAuthorizationCodeUrl();
         }
 
         /// <summary>
@@ -42,10 +68,11 @@ namespace CTCT
         /// </summary>
         /// <param name="httpContext">current application context</param>
         /// <param name="code">authorization code</param>
+        /// <param name="redirectUrl">where to redirect after authentication, must match configuration on Constant Contact site</param>
         /// <returns>access token</returns>
-        public static string GetAccessTokenByCode(HttpContext httpContext, string code)
+        public static string GetAccessTokenByCode(HttpContext httpContext, string code, string redirectUrl = null)
         {
-            var webForm = new AuthenticationWebPage(httpContext, null);
+            var webForm = new AuthenticationWebPage(httpContext, null, redirectUrl);
             return webForm.GetAccessTokenByCode(code);
         }
     }
